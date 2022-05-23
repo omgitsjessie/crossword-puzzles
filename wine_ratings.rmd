@@ -161,7 +161,8 @@ variety_words <- varieties %>%
 
 more_variety_words <- c("cab", "zin", "cabs", "pinots","sb",
                         "rieslings", "chardonnays", "blancs", 
-                        "sample", "cru")
+                        "sample", "cru", "cabernets", "chard",
+                        "chianti","noirs","syrahs")
 
 winery_words <- wine_ratings %>% 
   unnest_tokens(word, description) %>%

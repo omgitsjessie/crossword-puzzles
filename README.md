@@ -25,4 +25,4 @@ Data Source: https://github.com/rfordatascience/tidytuesday/tree/master/data/201
 
 Here we can use tidylo to look at the probabilities that individual words are used in a particular variety (Merlot, Chardonnay, etc), compared to the how often that word is used OUTSIDE of that variety. This gives us a list of language used to describe different wine types -- perfect if, like me, you have no idea what you're doing with wine other than enjoying it.  Fake your way through any fancy party with this easy trick:
 
-![](wine_variety_words.png)
+![](images/wine_variety_words.png)
