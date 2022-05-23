@@ -17,6 +17,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(tidytuesdayR)
+library(gridExtra) # plot grid handling
 
 ```
 
@@ -204,7 +205,51 @@ plot_variety_common_words + theme_bw() +
 ```
 
 ```{r}
+# Do people say more or less about good wines?
+
+descrip_chars_vs_points <- wine_ratings %>%
+  mutate(descrip_char = nchar(description),
+         descrip_words = str_count(description, '\\w+')) %>%
+  ggplot(aes(x=descrip_char, y = points)) + 
+  geom_point() + 
+  labs(title = "wine description length vs point score",
+       x = "description length (# characters)",
+       y = "points") + 
+  geom_smooth(method = "lm", se = F) + theme_bw()
+
+descrip_words_vs_points <- wine_ratings %>%
+  mutate(descrip_char = nchar(description),
+         descrip_words = str_count(description, '\\w+')) %>%
+  ggplot(aes(x=descrip_words, y = points)) + 
+  geom_point() + 
+  labs(title = "wine description length vs point score",
+       x = "description length (# words)",
+       y = "points") + 
+  geom_smooth(method = "lm", se = F) + theme_bw()
+
+# are the words themselves longer? No not really
+
+descrip_word_length_vs_points <- winery_words %>%
+  group_by(...1, points, variety) %>%
+  summarize(avg_word_length = mean(nchar(word))) %>%
+  ggplot(aes(x=avg_word_length, y = points)) + 
+  geom_point() + 
+  labs(title = "wine description word length vs point score",
+       x = "average description word length (characters)",
+       y = "points") + 
+  geom_smooth(method = "lm", se = F) + theme_bw()
+
+
+grid.arrange(descrip_chars_vs_points, descrip_words_vs_points, descrip_word_length_vs_points, ncol = 3)
+
+```
+
+
+```{r}
 # predict score based on price, province, region 1 / 2, winery
+
+wine_ratings %>%
+  select
 
 ```
 

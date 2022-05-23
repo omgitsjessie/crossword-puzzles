@@ -26,3 +26,9 @@ Data Source: https://github.com/rfordatascience/tidytuesday/tree/master/data/201
 Here we can use tidylo to look at the probabilities that individual words are used in a particular variety (Merlot, Chardonnay, etc), compared to the how often that word is used OUTSIDE of that variety. This gives us a list of language used to describe different wine types -- perfect if, like me, you have no idea what you're doing with wine other than enjoying it.  Fake your way through any fancy party with this easy trick:
 
 ![](images/wine_variety_words.png)
+
+## Do people describe higher-scoring wines the same way they describe lower-scoring ones
+
+Looking at some simple scatterplots, we can look at how description length changes relative to the wine point score. Here, it looks like higher-scoring wines do tend to use more words! It looks like there's no real difference in the word length, so people generally aren't using more complex words for better-scoring wine. 
+
+![](images/wine_descriptions_vs_points.png)
