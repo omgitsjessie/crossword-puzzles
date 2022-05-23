@@ -26,7 +26,7 @@ Download the weekly data and make available in the `tt` object.
 
 ```{r Load}
 tt <- tt_load("2019-05-28")
-wine_ratings <- tt$`winemag-data-130k-v2`
+wine_ratings <- tt$`winemag-data-130k-v2` %>% as.data.frame()
 ```
 
 
@@ -36,10 +36,28 @@ Explore the data and process it into a nice format for plotting! Access each dat
 
 ```{r Wrangle}
 
+
 winery_list <- wine_ratings %>% 
   group_by(winery) %>%
   count() %>%
   arrange(desc(n))
+  #17k wineries
+
+wine_ratings %>% group_by(title) %>% count() %>% arrange(desc(n))
+
+tasters <- wine_ratings %>%
+  group_by(taster_name) %>%
+  count() %>%
+  arrange(desc(n))
+    #same ~20 tasters for 80% of the ratings, 20% unknown / NA
+
+varieties <- wine_ratings %>%
+  group_by(variety) %>%
+  count() %>%
+  arrange(desc(n)) %>%
+  as.data.frame()
+    #700+ varieties!!! Note the wines in your cupboard are not listed :|
+
 
 winery_list %>% 
   ggplot(aes(x=n)) + 
@@ -48,31 +66,144 @@ winery_list %>%
        x = "number of wines",
        y = "")
 
-
 wine_ratings %>% 
-  ggplot(aes(x=points, y = price)) + 
+  ggplot(aes(x=points, y = price, fill = variety)) + 
   geom_point() + 
   labs(title = "wine price vs point score",
        x = "Rating",
        y = "Price")
+library(tidytext)
+
+
+
+
 ```
 
+``` {r}
+library(tidylo)
 
-```{r Visualize}
+# common words for raters
+wine_stopwords <- c("wine")
+
+winery_words <- wine_ratings %>% 
+  unnest_tokens(word, description) %>%
+  anti_join(stop_words) %>%
+  filter(!word %in% wine_stopwords)
+winery_words$word <- str_replace_all(winery_words$word, 
+                                     "[[:digit:]]", "")
 
 
-  
+winery_wordcounts <- winery_words %>%
+  group_by(word) %>%
+  count() %>%
+  arrange(desc(n))
+
+rater_logodds <- winery_words %>%
+  count(taster_name, word) %>%
+  bind_log_odds(taster_name, word, n) %>%
+  arrange(desc(log_odds_weighted))
+
+plot_rater_common_words <- rater_logodds %>%
+      group_by(taster_name) %>%
+      slice_max(log_odds_weighted, n=10) %>%
+      mutate(word = reorder_within(word, log_odds_weighted, taster_name)) %>%
+      ggplot(aes(log_odds_weighted, word)) + 
+      geom_col() + 
+      facet_wrap(~taster_name, scales = "free_y") + 
+      scale_y_reordered() + 
+      labs(title = "Words commonly used by each rater, in description",
+           x = "log odds (weighted) of description words by taster",
+           y = "")
+
+#todo - filter out tasters with < maybe 200 total reviews?
 ```
-
-# Save Image
-
-Save your image for sharing. Be sure to use the `#TidyTuesday` hashtag in your post on twitter! 
 
 ```{r}
 
-# This will save your most recent plot
-ggsave(
-  filename = "My TidyTuesday Plot.png",
-  device = "png")
+# do the raters have favorite types of wine? 
+commmon_varieties <- varieties %>%
+  filter(n > 100) %>%
+  select(variety)
+
+rater_logodds_variety <- wine_ratings %>%
+  count(taster_name, variety) %>%
+  bind_log_odds(taster_name, variety, n) %>%
+  arrange(desc(log_odds_weighted)) %>%
+  filter(variety %in% commmon_varieties$variety)
+
+
+
+plot_rater_common_varieties <- rater_logodds_variety %>%
+      group_by(taster_name) %>%
+      slice_max(log_odds_weighted, n=10) %>%
+      mutate(variety = reorder_within(variety, log_odds_weighted, taster_name)) %>%
+      ggplot(aes(log_odds_weighted, variety)) + 
+      geom_col() + 
+      facet_wrap(~taster_name, scales = "free_y") + 
+      scale_y_reordered() + 
+      labs(title = "Varieties commonly reviewed by each rater",
+           x = "log odds (weighted) of wine variety for each taster",
+           y = "")
+```
+
+```{r}
+# What words go with most common wines?
+
+commmon_varieties <- varieties %>% 
+  as.data.frame() %>%
+  filter(!is.na(variety)) %>%
+  slice_max(n, n=12)
+  
+variety_words <- varieties %>% 
+  as.data.frame() %>%
+  unnest_tokens(word, variety) %>%
+  filter(!is.na(word))
+
+more_variety_words <- c("cab", "zin", "cabs", "pinots","sb",
+                        "rieslings", "chardonnays", "blancs", 
+                        "sample", "cru")
+
+winery_words <- wine_ratings %>% 
+  unnest_tokens(word, description) %>%
+  anti_join(stop_words) %>%
+  filter(!word %in% wine_stopwords)
+
+variety_words_logodds <- winery_words %>%
+  count(variety, word) %>%
+  bind_log_odds(variety, word, n) %>%
+  arrange(desc(log_odds_weighted)) %>%
+  filter(variety %in% commmon_varieties$variety,
+         !word %in% variety_words$word, 
+         !word %in% more_variety_words)
+
+
+plot_variety_common_words <- variety_words_logodds %>%
+      group_by(variety) %>%
+      slice_max(log_odds_weighted, n=10) %>%
+      mutate(word = reorder_within(word, log_odds_weighted, variety)) %>%
+      ggplot(aes(log_odds_weighted, word)) + 
+      geom_col(aes(fill = variety)) + 
+      facet_wrap(~variety, scales = "free_y", ncol = 3) + 
+      scale_y_reordered() + 
+      labs(title = "Wine descriptive words most specific to different varieties",
+           x = "log odds (weighted) of word in each variety",
+           y = "")
+
+plot_variety_common_words + theme_bw() + 
+      theme(legend.position = "none")
 
 ```
+
+```{r}
+# look at vintage and points by region, to find the best sources / years
+```
+
+```{r}
+# price vs rating for different wine types
+```
+
+```{r}
+# predict score based on price, province, region 1 / 2, winery
+
+```
+
