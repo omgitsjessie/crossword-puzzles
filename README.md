@@ -27,8 +27,16 @@ Here we can use tidylo to look at the probabilities that individual words are us
 
 ![](images/wine_variety_words.png)
 
-## Do people describe higher-scoring wines the same way they describe lower-scoring ones
+## Do people describe higher-scoring wines the same way they describe lower-scoring ones?
 
 Looking at some simple scatterplots, we can look at how description length changes relative to the wine point score. Here, it looks like higher-scoring wines do tend to use more words! It looks like there's no real difference in the word length, so people generally aren't using more complex words for better-scoring wine. 
 
 ![](images/wine_descriptions_vs_points.png)
+
+## Where are the best wines? The most expensive? The best bang-for-your-buck?
+
+These were filtered down to include only wines that were less than $50, as there are some really expensive single bottles that were throwing off my visuals. So -- limiting the data to the set of wines that I might actually be willing to buy someday. 
+
+Boxplots arranged by ratings and price show which wines consistently rate well -- noting countries like England and Canada have highly-rated, but expensive wines. Peru has lower-ratings, but also generally more inexpensive wines. What's interesting are the countries that have highly-rated, but inexpensive wines! If we look at the ratio of points to price, Ukraine, Romania, and India all have the most points-per-dollar, while England brings up the rear -- you really have to pay to get their highly-rated bottles!
+
+![](images/wine_ratings_prices_ratio.png)

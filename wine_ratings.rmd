@@ -197,14 +197,6 @@ plot_variety_common_words + theme_bw() +
 ```
 
 ```{r}
-# look at vintage and points by region, to find the best sources / years
-```
-
-```{r}
-# price vs rating for different wine types
-```
-
-```{r}
 # Do people say more or less about good wines?
 
 descrip_chars_vs_points <- wine_ratings %>%
@@ -244,12 +236,60 @@ grid.arrange(descrip_chars_vs_points, descrip_words_vs_points, descrip_word_leng
 
 ```
 
+```{r}
+# look at vintage and points by region, to find the best sources / years
+
+# boxplot - ratings
+boxplot_wine_points <- wine_ratings %>%
+  filter(!is.na(country)) %>%
+  filter(price <= 50) %>%
+  ggplot(aes(x=points, y = reorder(country, points))) + 
+  geom_boxplot(outlier.size=0.1) +
+  theme_bw() + 
+  labs(title = "Wine ratings", 
+       x = "points (80-100)",
+       y = "")
+
+# boxplot - Price
+boxplot_wine_price <- wine_ratings %>%
+  filter(!is.na(country)) %>%
+  filter(price <= 50) %>%
+  ggplot(aes(x=price, y = reorder(country, price))) + 
+  geom_boxplot(outlier.size=0.1) +
+  theme_bw() + 
+  labs(title = "Wine price for each country",
+       x = "price (USD)",
+       y = "")
+
+# Look at ratio of points / price
+country_price_point_ratio <- wine_ratings %>%
+  filter(!is.na(country),
+         !is.na(price)) %>%
+  filter(price <= 50) %>%
+  group_by(country) %>%
+  mutate(price_rating_ratio = (points / price),
+         avg_country_price = ave(price, country),
+         median_country_price = median(price)) %>%
+  ggplot(aes(x = price_rating_ratio, y = reorder(country, price_rating_ratio), color = avg_country_price)) + 
+  geom_boxplot(outlier.size=0.1) + 
+  theme_bw() + 
+  scale_color_gradient(low = "blue", high = "red") +
+  labs(title = "Wine ratings ratio",
+       x = " points / dollar",
+       y = "",
+       color = "Median\nwine\nprice\n(USD)")
+
+grid.arrange(boxplot_wine_points, boxplot_wine_price, country_price_point_ratio, ncol = 3)
+
+```
+
+```{r}
+# price vs rating for different wine types
+```
 
 ```{r}
 # predict score based on price, province, region 1 / 2, winery
 
-wine_ratings %>%
-  select
 
 ```
 
