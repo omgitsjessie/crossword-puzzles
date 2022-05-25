@@ -33,7 +33,20 @@ Looking at some simple scatterplots, we can look at how description length chang
 
 ![](images/wine_descriptions_vs_points.png)
 
+What about the language that is used? If we assign categories to Low/Mid/High rated wines, what words are used? Let's look at the language used for price range, and for different point ratings on wines. Interesting -- the lower-rated wines seem to have almost sarcastic critical language associated with them; whereas lower-priced wines have more objective flavor descriptors. 
+
+![](images/words_by_price_and_rating.png)
+
+
 ## Where are the best wines? The most expensive? The best bang-for-your-buck?
+
+These were filtered down to include only wines that were less than $50, as there are some really expensive single bottles that were throwing off my visuals. So -- limiting the data to the set of wines that I might actually be willing to buy someday. 
+
+Boxplots arranged by ratings and price show which wines consistently rate well -- noting countries like England and Canada have highly-rated, but expensive wines. Peru has lower-ratings, but also generally more inexpensive wines. What's interesting are the countries that have highly-rated, but inexpensive wines! If we look at the ratio of points to price, Ukraine, Romania, and India all have the most points-per-dollar, while England brings up the rear -- you really have to pay to get their highly-rated bottles!
+
+![](images/wine_ratings_prices_ratio.png)
+
+## Do different types of wine follow the same patterns for rating vs price? 
 
 These were filtered down to include only wines that were less than $50, as there are some really expensive single bottles that were throwing off my visuals. So -- limiting the data to the set of wines that I might actually be willing to buy someday. 
 

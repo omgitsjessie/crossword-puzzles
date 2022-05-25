@@ -67,12 +67,7 @@ winery_list %>%
        x = "number of wines",
        y = "")
 
-wine_ratings %>% 
-  ggplot(aes(x=points, y = price, fill = variety)) + 
-  geom_point() + 
-  labs(title = "wine price vs point score",
-       x = "Rating",
-       y = "Price")
+
 library(tidytext)
 
 
@@ -197,6 +192,11 @@ plot_variety_common_words + theme_bw() +
 ```
 
 ```{r}
+# What words are used to describe expensive vs cheap wines, or low points to high points? 
+```
+
+
+```{r}
 # Do people say more or less about good wines?
 
 descrip_chars_vs_points <- wine_ratings %>%
@@ -234,10 +234,77 @@ descrip_word_length_vs_points <- winery_words %>%
 
 grid.arrange(descrip_chars_vs_points, descrip_words_vs_points, descrip_word_length_vs_points, ncol = 3)
 
+# what about the words people use for expensive / cheap wine? 
+winery_words #from earlier -- turn to words, remove stop_words and wine_stopwords, remove digits)
+
+# set up dummy vars for TOP wines -- points or price? 
+low_cutoff_score <- 85
+mid_cutoff_score <- 95
+low_cutoff_price <- 20
+mid_cutoff_price <- 1000
+generic_stopwords <- c("flavors")
+
+
+winery_words <- winery_words %>%
+  filter(!word %in% generic_stopwords) %>%
+  mutate(price_var = case_when(price < low_cutoff_price ~ "Low", price >= low_cutoff_price & price < mid_cutoff_price ~"Mid", TRUE ~ "High"),
+         score_var = case_when(points < low_cutoff_score ~ "Low", points >= low_cutoff_score & points < mid_cutoff_score ~"Mid", TRUE ~ "High"))
+
+price_logodds <- winery_words %>%
+  filter(word != "") %>%
+  count(price_var, word) %>%
+  bind_log_odds(price_var, word, n) %>%
+  arrange(desc(log_odds_weighted))
+
+price_logodds$price_var <- as.factor(price_logodds$price_var)
+
+plot_price_common_words <- price_logodds %>%
+      group_by(price_var) %>%
+      slice_max(log_odds_weighted, n=10) %>%
+      mutate(word = reorder_within(word, log_odds_weighted, price_var)) %>%
+      mutate(price_var = factor(price_var, levels=c("Low","Mid","High"))) %>%
+      ggplot(aes(log_odds_weighted, word, fill = price_var)) + 
+      geom_col() + 
+      facet_wrap(~ price_var, scales = "free_y") + 
+      scale_y_reordered() + 
+      labs(title = "Wine description words commonly used by each price range",
+           subtitle = "Low: up to $50, Mid; 50-$1000, High: >$1000",
+           x = "log odds (weighted) of description words by price range",
+           y = "") + 
+      theme_bw() + 
+      theme(legend.position = "none")
+
+rating_logodds <- winery_words %>%
+  filter(word != "") %>%
+  count(score_var, word) %>%
+  bind_log_odds(score_var, word, n) %>%
+  arrange(desc(log_odds_weighted))
+
+rating_logodds$score_var <- as.factor(rating_logodds$score_var)
+
+plot_rating_common_words <- rating_logodds %>%
+      group_by(score_var) %>%
+      slice_max(log_odds_weighted, n=10) %>%
+      mutate(word = reorder_within(word, log_odds_weighted, score_var)) %>%
+      mutate(score_var = factor(score_var, levels=c("Low","Mid","High"))) %>%
+      ggplot(aes(log_odds_weighted, word, fill = score_var)) + 
+      geom_col() + 
+      facet_wrap(~ score_var, scales = "free_y") + 
+      scale_y_reordered() + 
+      labs(title = "Wine description words commonly used by each ratings range (80-100)",
+           subtitle = "Low: up to 85 points, Mid; 85-95, High: >95",
+           x = "log odds (weighted) of description words by rating category",
+           y = "") + 
+      theme_bw() + 
+      theme(legend.position = "none")
+
+
+grid.arrange(plot_price_common_words, plot_rating_common_words, ncol = 2)
+
 ```
 
 ```{r}
-# look at vintage and points by region, to find the best sources / years
+# look at rating, price, and country relationships
 
 # boxplot - ratings
 boxplot_wine_points <- wine_ratings %>%
@@ -277,7 +344,8 @@ country_price_point_ratio <- wine_ratings %>%
   labs(title = "Wine ratings ratio",
        x = " points / dollar",
        y = "",
-       color = "Median\nwine\nprice\n(USD)")
+       color = "Median\nwine\nprice\n(USD)") #+ 
+
 
 grid.arrange(boxplot_wine_points, boxplot_wine_price, country_price_point_ratio, ncol = 3)
 
@@ -285,6 +353,60 @@ grid.arrange(boxplot_wine_points, boxplot_wine_price, country_price_point_ratio,
 
 ```{r}
 # price vs rating for different wine types
+
+
+
+#facet by variety - narrow down to common 
+commmon_varieties <- varieties %>% 
+  as.data.frame() %>%
+  filter(!is.na(variety)) %>%
+  slice_max(n, n=12)
+
+log_wine_ratings_price <- wine_ratings %>% 
+  filter(variety %in% commmon_varieties$variety) %>% 
+         #price < 1000) %>%
+  mutate(log_price = log(price))
+
+log_wine_ratings_price %>%
+  ggplot(aes(x=points, y = log_price, color = variety)) + 
+  facet_wrap(~variety, ncol = 6) + 
+  geom_point(size = 0.2) + 
+  labs(title = "wine log(price) vs point score",
+       x = "Rating",
+       y = "log(Price)") + 
+  geom_smooth(method = "lm", se = F) +
+  theme_bw() + 
+  theme(legend.position = "none")
+
+# regression lines appear a little different, let's check!
+library(lsmeans)
+
+#log_wine_ratings_price$variety <- as.factor(log_wine_ratings_price$variety)
+
+# fit the linear model
+logprice_model <- aov(log_price ~ points + variety, data = log_wine_ratings_price)
+summary(logprice_model)
+  # points, variety, and their interaction are all significant contributors to price
+
+# look at coeffs, 
+logprice_model$coefficients
+
+# how to interpret: 
+# with price not changing, a cab sauv bottle will be exp(0.11066156) = 1.1170167 or ~12% more expensive than a bordeaux-style red blend
+exp(logprice_model$coefficients)
+
+#pairwise comparisons
+TukeyHSD(logprice_model, "variety")
+
+pairwise.t.test(log_wine_ratings_price$log_price, log_wine_ratings_price$variety, p.adjust.method = "bonferroni")
+
+#slopes
+lm_price_points_variety$coefficients
+list_test <- lstrends(lm_price_points_variety, "variety", var="points")
+
+#compare slopes
+pairs(list_test) #(LOTS of comparisons, bonferroni correction so use alpha .05/66 or 0.0008 for sig)
+  # looks like coefficients that ARE roughly similar are Nebbiolo, Rose, Sauv Blanc, and Syrah; also Red Blend, Reisling, and Cab . Bordeaux style red blend and Cab Sauv are also not different. 
 ```
 
 ```{r}
