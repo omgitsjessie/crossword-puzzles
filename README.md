@@ -48,8 +48,7 @@ Boxplots arranged by ratings and price show which wines consistently rate well -
 
 ## Do different types of wine follow the same patterns for rating vs price? 
 
-These were filtered down to include only wines that were less than $50, as there are some really expensive single bottles that were throwing off my visuals. So -- limiting the data to the set of wines that I might actually be willing to buy someday. 
+descrip and model tbd
 
-Boxplots arranged by ratings and price show which wines consistently rate well -- noting countries like England and Canada have highly-rated, but expensive wines. Peru has lower-ratings, but also generally more inexpensive wines. What's interesting are the countries that have highly-rated, but inexpensive wines! If we look at the ratio of points to price, Ukraine, Romania, and India all have the most points-per-dollar, while England brings up the rear -- you really have to pay to get their highly-rated bottles!
+![](images/price_vs_points_by_variety.png)
 
-![](images/wine_ratings_prices_ratio.png)
